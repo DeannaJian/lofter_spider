@@ -8,15 +8,15 @@ import sys
 
 def modify_spider(url):
     spider_path = "lofter/spiders/story.py"
-    spider_file = open(spider_path, 'w')
+    spider_file = open(spider_path, 'w', encoding='utf-8')
 
-    with open('spider_template1.txt', 'r') as ff:
+    with open('spider_template1.txt', 'r', encoding='utf-8') as ff:
         code_buffer = ff.read()
         spider_file.write(code_buffer)
 
     spider_file.write(url)
 
-    with open('spider_template2.txt', 'r') as ff:
+    with open('spider_template2.txt', 'r', encoding='utf-8') as ff:
         code_buffer = ff.read()
         spider_file.write(code_buffer)
 
@@ -47,23 +47,29 @@ def output_txt_from_content_xml(input_file, output_file):
             order[item_index] = item_num
             item_num += 1
 
-    with open(output_file, 'a') as ff:
+    with open(output_file, 'w', encoding='utf-8') as ff:
         for ii in range(1, item_num):
             ff.write("\n")
-            title = root.find('.//item[%d]/title' % order[str(ii)]).text
-            ff.write(title.encode("utf-8") + "\n\n")
+            element = root.find('.//item[%d]/title' % order[str(ii)])
+            title = element.text
+            ff.write(title + "\n\n")
             paragraph_list = root.findall(
                 './/item[%d]/paragraph/value' % order[str(ii)])
             for paragraph in paragraph_list:
                 para_content = paragraph.text
                 if para_content is not None:
-                    ff.write(para_content.encode("utf-8") + "\n")
+                    ff.write(para_content + "\n")
             ff.write("\n")
 
 
 if (__name__ == "__main__"):
-    # usage: python get_lofter_stories.py 'http://jishibucuotuo.lofter.com/post/1f9af1a3_ef60c284'
-    assert(len(sys.argv) == 2)
+
+    if len(sys.argv) != 2:
+        print('''usage:
+    python get_lofter_stories.py 'http://jishibucuotuo.lofter.com/post/1f9af1a3_ef60c284'
+        ''')
+        os._exit()
+
     modify_spider(sys.argv[1])
 
     tt = time.localtime()
@@ -77,7 +83,7 @@ if (__name__ == "__main__"):
     subprocess.call(cmd)
 
     output_txt_from_content_xml(temp_filename, output_filename)
-    print 'Done.\n'
-    print output_filename + '\n'
+    print('Done.\n')
+    print(output_filename + '\n')
 
     os.remove(temp_filename)
