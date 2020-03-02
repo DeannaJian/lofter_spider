@@ -65,7 +65,7 @@ if (__name__ == "__main__"):
         print('''
 Usage:
     python get_lofter_stories.py \
-https://sauceshasi.lofter.com/post/1d0873d6_1c811cb30
+https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     This spider crawls Lofter articles listed in a users's archive page.
     Specify the oldest paragraph you wish to crawl. Then it downloads all
