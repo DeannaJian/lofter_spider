@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy.linkextractors import LinkExtractor
 
 
 class StorySpider(scrapy.Spider):
     name = 'story'
     allowed_domains = ['lofter.com']
-    start_urls = ['http://jishibucuotuo.lofter.com/post/1f9af1a3_ef60c284']
+    start_urls = ['https://sauceshasi.lofter.com/post/1d0873d6_5bbe1c4']
 
     def parse(self, response):
-        le = LinkExtractor(restrict_css='div.txtcont')
-        for link in le.extract_links(response):
-            yield scrapy.Request(link.url, callback=self.parse_chapter)
-
-    def parse_chapter(self, response):
-        part = response.css('div.txtcont')
-        title = part.css('strong::text').extract_first()
-        paragraph = part.xpath('p/text()').extract()
-        index = response.css('h2 a::text').re_first(u'.*（(.*)）.*')
+        date = response.css('.date::text').extract_first()
+        title = response.css('h2 a::text').extract_first()
+        paragraph = response.css('.text').xpath('//div/p/text()').extract()
         yield {
-            'paragraph': paragraph,
+            'date': date,
             'title': title,
-            'index': index
+            'paragraph': paragraph
         }
+
+        next_pages = response.xpath('//*[@id="__prev_permalink__"]/@href')
+
+        if next_pages:
+            yield scrapy.Request(next_pages.extract_first(),
+                                 callback=self.parse)
