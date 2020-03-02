@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import xml.etree.ElementTree as ET
 import subprocess
 import time
 import os
@@ -7,6 +6,10 @@ import sys
 
 
 def modify_spider(url):
+    """
+        Modify story.py by embedding the url of the first page to crawl.
+        :param url: url of the first(oldest) article to crawl.
+    """
     spider_path = "lofter/spiders/story.py"
     spider_file = open(spider_path, 'w', encoding='utf-8')
 
@@ -23,58 +26,59 @@ def modify_spider(url):
     spider_file.close()
 
 
-def book_title_from_content_xml(input_file):
+def output_txt_from_xml(input_file, output_file, silent=False):
+    """
+        Convert the crawled xml file into a txt file.
+        :param input_file: file path of the xml file.
+        :param output_file: file path of the output txt file.
+    """
+    import xml.etree.ElementTree as ET
+
     tree = ET.parse(input_file)
     root = tree.getroot()
 
-    item = root.findall('item')[0]
-    book_title = item.find('book_title').text
-    return book_title
-
-
-def output_txt_from_content_xml(input_file, output_file):
-    tree = ET.parse(input_file)
-    root = tree.getroot()
-
-    item_num = 1
-    order = {}
-
-    for item in root.findall('item'):
-        item_index = item.find('index').text
-        if not item_index.isdigit():
-            root.remove(item)
-        else:
-            order[item_index] = item_num
-            item_num += 1
+    item_num = len(root.findall('item')) + 1
 
     with open(output_file, 'w', encoding='utf-8') as ff:
         for ii in range(1, item_num):
-            ff.write("\n")
-            element = root.find('.//item[%d]/title' % order[str(ii)])
+            if not silent:
+                print('Converting Paragraph %d...' % ii)
+            element = root.find('.//item[%d]/date' % ii)
+            date = element.text
+            ff.write(date + "\n")
+            element = root.find('.//item[%d]/title' % ii)
             title = element.text
             ff.write(title + "\n\n")
             paragraph_list = root.findall(
-                './/item[%d]/paragraph/value' % order[str(ii)])
+                './/item[%d]/paragraph/value' % ii)
             for paragraph in paragraph_list:
                 para_content = paragraph.text
                 if para_content is not None:
                     ff.write(para_content + "\n")
+            if (ii % 50) == 0:
+                ff.flush()
             ff.write("\n")
 
 
 if (__name__ == "__main__"):
-
     if len(sys.argv) != 2:
-        print('''usage:
-    python get_lofter_stories.py 'http://jishibucuotuo.lofter.com/post/1f9af1a3_ef60c284'
+        print('''
+Usage:
+    python get_lofter_stories.py \
+https://sauceshasi.lofter.com/post/1d0873d6_1c811cb30
+
+    This spider crawls Lofter articles listed in a users's archive page.
+    Specify the oldest paragraph you wish to crawl. Then it downloads all
+    of the articles till the latest one is obtained. The downloaded articles
+    will be saved in a txt file (lofterXXX.txt).
         ''')
-        os._exit()
+        os._exit(-1)
 
     modify_spider(sys.argv[1])
 
     tt = time.localtime()
     temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
-    output_filename = "output%s.txt" % time.strftime("%m%d", tt)
+    output_filename = "lofter%s.txt" % time.strftime("%m%d", tt)
 
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
@@ -82,7 +86,7 @@ if (__name__ == "__main__"):
     cmd = "scrapy crawl story -o %s --nolog" % temp_filename
     subprocess.call(cmd)
 
-    output_txt_from_content_xml(temp_filename, output_filename)
+    output_txt_from_xml(temp_filename, output_filename, True)
     print('Done.\n')
     print(output_filename + '\n')
 
