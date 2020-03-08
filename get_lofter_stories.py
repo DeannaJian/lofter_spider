@@ -101,7 +101,7 @@ Usage:
     python get_lofter_stories.py \
 https://XXX.lofter.com/post/XXXXXXXXXXXX
 
-    This spider crawls Lofter articles listed in a users's archive page.
+    This spider crawls Lofter posts listed in a users's archive page.
     Specify the oldest post you wish to crawl. Then it downloads all
     of the articles till the latest one is obtained. The downloaded articles
     will be saved in a txt file (lofterXXX.txt).
