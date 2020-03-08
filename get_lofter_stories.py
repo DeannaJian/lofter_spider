@@ -5,6 +5,7 @@ import os
 import sys
 import re
 
+
 def modify_spider(url):
     """
         Modify story.py by embedding the url of the first page to crawl.
@@ -76,11 +77,11 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     url = sys.argv[1]
 
-    matchObj = re.match(r'https://(.*).lofter.com(.*?)', url)
+    matchObj = re.match(r'http(.*)://(.*).lofter.com(.*?)', url)
     if not matchObj:
         os._exit(-1)
 
-    author = matchObj.group(1)
+    author = matchObj.group(2)
 
     modify_spider(url)
 

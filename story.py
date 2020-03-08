@@ -5,10 +5,10 @@ import scrapy
 class StorySpider(scrapy.Spider):
     name = 'story'
     allowed_domains = ['lofter.com']
-    start_urls = ['https://leeenciel.lofter.com/post/3abd38_1c738d6f0']
+    start_urls = ['http://sauceshasi.lofter.com/post/1d0873d6_1c83546f3']
 
     def parse(self, response):
-        date = response.css('div.info div.label a::text').extract_first()
+        date = response.css('div.info a::text').extract_first()
         title = response.css('div.text h2 a::text').extract_first()
         paragraph = response.css('.text').xpath('//div/p/text()').extract()
         yield {
