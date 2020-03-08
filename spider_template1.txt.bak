@@ -1,9 +1,0 @@
-# -*- coding: utf-8 -*-
-import scrapy
-from scrapy.linkextractors import LinkExtractor
-
-
-class StorySpider(scrapy.Spider):
-    name = 'story'
-    allowed_domains = ['lofter.com']
-    start_urls = [

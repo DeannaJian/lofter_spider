@@ -10,7 +10,7 @@ def modify_spider(url):
         Modify story.py by embedding the url of the first page to crawl.
         :param url: url of the first(oldest) article to crawl.
     """
-    spider_path = "lofter/spiders/story.py"
+    spider_path = "story.py"
     spider_file = open(spider_path, 'w', encoding='utf-8')
 
     with open('spider_template1.txt', 'r', encoding='utf-8') as ff:
@@ -43,12 +43,12 @@ def output_txt_from_xml(input_file, output_file, silent=False):
         for ii in range(1, item_num):
             if not silent:
                 print('Converting Paragraph %d...' % ii)
+            element = root.find('.//item[%d]/title' % ii)
+            title = ('%d. ' % ii) + element.text
+            ff.write(title + '\n')
             element = root.find('.//item[%d]/date' % ii)
             date = element.text
-            ff.write(date + "\n")
-            element = root.find('.//item[%d]/title' % ii)
-            title = element.text
-            ff.write(title + "\n\n")
+            ff.write(date + '\n\n')
             paragraph_list = root.findall(
                 './/item[%d]/paragraph/value' % ii)
             for paragraph in paragraph_list:
@@ -83,11 +83,11 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
 
-    cmd = "scrapy crawl story -o %s --nolog" % temp_filename
+    cmd = "scrapy runspider story.py -o %s --nolog" % temp_filename
     subprocess.call(cmd)
 
     output_txt_from_xml(temp_filename, output_filename, True)
     print('Done.\n')
-    print(output_filename + '\n')
+    print('Save to: %s\n' % output_filename)
 
     os.remove(temp_filename)
