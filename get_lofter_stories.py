@@ -3,7 +3,7 @@ import subprocess
 import time
 import os
 import sys
-
+import re
 
 def modify_spider(url):
     """
@@ -74,11 +74,19 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
         ''')
         os._exit(-1)
 
-    modify_spider(sys.argv[1])
+    url = sys.argv[1]
+
+    matchObj = re.match(r'https://(.*).lofter.com(.*?)', url)
+    if not matchObj:
+        os._exit(-1)
+
+    author = matchObj.group(1)
+
+    modify_spider(url)
 
     tt = time.localtime()
     temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
-    output_filename = "lofter%s.txt" % time.strftime("%m%d", tt)
+    output_filename = "%s_%s.txt" % (author, time.strftime("%m%d", tt))
 
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
@@ -87,7 +95,7 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
     subprocess.call(cmd)
 
     output_txt_from_xml(temp_filename, output_filename, True)
-    print('Done.\n')
+    print('\nDone.\n')
     print('Save to: %s\n' % output_filename)
 
     os.remove(temp_filename)
