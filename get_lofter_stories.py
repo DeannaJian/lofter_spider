@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import subprocess
 import time
 import os
 import sys
 import re
+from scrapy.crawler import CrawlerProcess
 
 
 def modify_spider(url):
@@ -61,6 +61,39 @@ def output_txt_from_xml(input_file, output_file, silent=False):
             ff.write("\n")
 
 
+def grab_and_output(url, author):
+    """
+        Grab posts of an author starting from the page specified by the url
+            until the latest post is obtained. Then output to a text file.
+        :param url: the oldest lofter post to grab.
+        :param author: the author's Lofter name.
+    """
+    modify_spider(url)
+    from story import StorySpider
+
+    tt = time.localtime()
+    temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
+    output_filename = "%s_%s.txt" % (author, time.strftime("%m%d", tt))
+
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
+
+    process = CrawlerProcess(settings={
+        'FEED_FORMAT': 'xml',
+        'FEED_URI': temp_filename,
+        'LOG_ENABLED': 'false'
+    })
+
+    process.crawl(StorySpider)
+    process.start()
+
+    output_txt_from_xml(temp_filename, output_filename, True)
+    print('\nDone.\n')
+    print('Save to: %s\n' % output_filename)
+
+    os.remove(temp_filename)
+
+
 if (__name__ == "__main__"):
     if len(sys.argv) != 2:
         print('''
@@ -69,7 +102,7 @@ Usage:
 https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     This spider crawls Lofter articles listed in a users's archive page.
-    Specify the oldest paragraph you wish to crawl. Then it downloads all
+    Specify the oldest post you wish to crawl. Then it downloads all
     of the articles till the latest one is obtained. The downloaded articles
     will be saved in a txt file (lofterXXX.txt).
         ''')
@@ -83,20 +116,4 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     author = matchObj.group(2)
 
-    modify_spider(url)
-
-    tt = time.localtime()
-    temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
-    output_filename = "%s_%s.txt" % (author, time.strftime("%m%d", tt))
-
-    if os.path.exists(temp_filename):
-        os.remove(temp_filename)
-
-    cmd = "scrapy runspider story.py -o %s --nolog" % temp_filename
-    subprocess.call(cmd)
-
-    output_txt_from_xml(temp_filename, output_filename, True)
-    print('\nDone.\n')
-    print('Save to: %s\n' % output_filename)
-
-    os.remove(temp_filename)
+    grab_and_output(url, author)

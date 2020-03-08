@@ -5,7 +5,7 @@ import scrapy
 class StorySpider(scrapy.Spider):
     name = 'story'
     allowed_domains = ['lofter.com']
-    start_urls = ['http://sauceshasi.lofter.com/post/1d0873d6_1c83546f3']
+    start_urls = ['https://leeenciel.lofter.com/post/3abd38_1c801e02c']
 
     def parse(self, response):
         date = response.css('div.info a::text').extract_first()
