@@ -4,6 +4,7 @@ import os
 import sys
 import re
 from scrapy.crawler import CrawlerProcess
+import scrapy
 
 
 def modify_spider(url):
@@ -61,6 +62,23 @@ def output_txt_from_xml(input_file, output_file, silent=False):
             ff.write("\n")
 
 
+def parse(self, response):
+    date = response.css('div.info a::text').extract_first()
+    title = response.css('div.text h2 a::text').extract_first()
+    paragraph = response.css('.text').xpath('//div/p/text()').extract()
+    yield {
+        'date': date,
+        'title': title,
+        'paragraph': paragraph
+    }
+
+    next_pages = response.xpath('//*[@id="__prev_permalink__"]/@href')
+
+    if next_pages:
+        yield scrapy.Request(next_pages.extract_first(),
+                             callback=self.parse)
+
+
 def grab_and_output(url, author):
     """
         Grab posts of an author starting from the page specified by the url
@@ -68,8 +86,14 @@ def grab_and_output(url, author):
         :param url: the oldest lofter post to grab.
         :param author: the author's Lofter name.
     """
-    modify_spider(url)
-    from story import StorySpider
+    # modify_spider(url)
+    # from story import StorySpider
+
+    StorySpider = type('StorySpider', (scrapy.Spider,),
+                       dict(name='story',
+                            allowed_domains=['lofter.com'],
+                            start_urls=[url],
+                            parse=parse))
 
     tt = time.localtime()
     temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
@@ -103,8 +127,8 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     This spider crawls Lofter posts listed in a users's archive page.
     Specify the oldest post you wish to crawl. Then it downloads all
-    of the articles till the latest one is obtained. The downloaded articles
-    will be saved in a txt file (lofterXXX.txt).
+    of the posts till the latest one is obtained. The downloaded posts
+    will be saved in a txt file (XXX.txt).
         ''')
         os._exit(-1)
 
