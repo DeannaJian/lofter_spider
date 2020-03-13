@@ -7,27 +7,6 @@ from scrapy.crawler import CrawlerProcess
 import scrapy
 
 
-def modify_spider(url):
-    """
-        Modify story.py by embedding the url of the first page to crawl.
-        :param url: url of the first(oldest) article to crawl.
-    """
-    spider_path = "story.py"
-    spider_file = open(spider_path, 'w', encoding='utf-8')
-
-    with open('spider_template1.txt', 'r', encoding='utf-8') as ff:
-        code_buffer = ff.read()
-        spider_file.write(code_buffer)
-
-    spider_file.write(url)
-
-    with open('spider_template2.txt', 'r', encoding='utf-8') as ff:
-        code_buffer = ff.read()
-        spider_file.write(code_buffer)
-
-    spider_file.close()
-
-
 def output_txt_from_xml(input_file, output_file, silent=False):
     """
         Convert the crawled xml file into a txt file.
@@ -79,15 +58,19 @@ def parse(self, response):
                              callback=self.parse)
 
 
-def grab_and_output(url, author):
+def grab_and_output(url, author, output_folder):
     """
         Grab posts of an author starting from the page specified by the url
             until the latest post is obtained. Then output to a text file.
         :param url: the oldest lofter post to grab.
         :param author: the author's Lofter name.
+        :param output_folder: the folder for saving the output txt file.
+        :returns: full path of the output file
     """
-    # modify_spider(url)
-    # from story import StorySpider
+    import random
+
+    if not os.path.exists(output_folder):
+        return ''
 
     StorySpider = type('StorySpider', (scrapy.Spider,),
                        dict(name='story',
@@ -97,10 +80,17 @@ def grab_and_output(url, author):
 
     tt = time.localtime()
     temp_filename = "temp_output%s.xml" % time.strftime("%m%d", tt)
-    output_filename = "%s_%s.txt" % (author, time.strftime("%m%d", tt))
+    while os.path.exists(temp_filename):
+        temp_filename = ("temp_output%s(%d).xml" %
+                         (time.strftime("%m%d", tt), random.randint(0, 9)))
 
-    if os.path.exists(temp_filename):
-        os.remove(temp_filename)
+    ii = 1
+    output_filename = output_folder + \
+        '\\%s_%s.txt' % (author, time.strftime('%m%d', tt))
+    while os.path.exists(output_filename):
+        output_filename = output_folder + '\\%s_%s(%d).txt' \
+            % (author, time.strftime('%m%d', tt), ii)
+        ii += 1
 
     process = CrawlerProcess(settings={
         'FEED_FORMAT': 'xml',
@@ -112,10 +102,9 @@ def grab_and_output(url, author):
     process.start()
 
     output_txt_from_xml(temp_filename, output_filename, True)
-    print('\nDone.\n')
-    print('Save to: %s\n' % output_filename)
 
     os.remove(temp_filename)
+    return output_filename
 
 
 if (__name__ == "__main__"):
@@ -134,10 +123,12 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     url = sys.argv[1]
 
-    matchObj = re.match(r'http(.*)://(.*).lofter.com(.*?)', url)
+    matchObj = re.match(r'http(s*)://(.*).lofter.com(.*?)', url)
     if not matchObj:
         os._exit(-1)
 
     author = matchObj.group(2)
 
-    grab_and_output(url, author)
+    output_filename = grab_and_output(url, author)
+    print('\nDone.\n')
+    print('Save to: %s\n' % output_filename)
