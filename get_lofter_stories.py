@@ -35,7 +35,7 @@ def output_txt_from_xml(input_file, output_file, silent=False):
             for paragraph in paragraph_list:
                 para_content = paragraph.text
                 if para_content is not None:
-                    ff.write(para_content + "\n")
+                    ff.write('  ' + para_content + '\n')
             if (ii % 50) == 0:
                 ff.flush()
             ff.write("\n")
