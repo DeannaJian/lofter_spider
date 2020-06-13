@@ -20,35 +20,66 @@ def output_txt_from_xml(input_file, output_file, silent=False):
 
     item_num = len(root.findall('item')) + 1
 
+    title_patents = ('title', 'title2')
+    paragraph_patents = ('paragraph', 'paragraph2', 'paragraph3')
+
     with open(output_file, 'w', encoding='utf-8') as ff:
         for ii in range(1, item_num):
             if not silent:
                 print('Converting Paragraph %d...' % ii)
-            element = root.find('.//item[%d]/title' % ii)
-            title = ('%d. ' % ii) + element.text
-            ff.write(title + '\n')
+
+            ff.write('%d. \n' % ii)
+
+            for jj in range(0, len(title_patents)):
+                pattent = './/item[%d]/%s' % (ii, title_patents[jj])
+                title = root.find(pattent).text
+                if title != 'None':
+                    ff.write('  ' + title + '\n')
+
             element = root.find('.//item[%d]/date' % ii)
             date = element.text
-            ff.write(date + '\n\n')
-            paragraph_list = root.findall(
-                './/item[%d]/paragraph/value' % ii)
-            for paragraph in paragraph_list:
-                para_content = paragraph.text
-                if para_content is not None:
-                    ff.write('  ' + para_content + '\n')
+            if date != 'None':
+                ff.write('  ' + date + '\n\n')
+
+            month = root.find('.//item[%d]/month' % ii).text
+            day = root.find('.//item[%d]/day' % ii).text
+            if ((month != 'None') & (day != 'None')):
+                ff.write('  %s-%s\n\n' % (month, day))
+
+            for jj in range(0, len(paragraph_patents)):
+                paragraph_list = root.findall(
+                    './/item[%d]/%s/value' % (ii, paragraph_patents[jj]))
+                for paragraph in paragraph_list:
+                    para_content = paragraph.text
+                    if para_content is not None:
+                        ff.write('  ' + para_content + '\n')
+
             if (ii % 50) == 0:
                 ff.flush()
             ff.write("\n")
 
 
 def parse(self, response):
-    date = response.css('div.info a::text').extract_first()
+    date = response.css('div.info div.label a::text').extract_first()
+    day = response.css('div.day a::text').extract_first()
+    month = response.css('div.month a::text').extract_first()
     title = response.css('div.text h2 a::text').extract_first()
-    paragraph = response.css('.text').xpath('//div/p/text()').extract()
+    title2 = response.css('.ttl').xpath('//h2/a/text()').extract_first()
+    paragraph = response.css('.content').css('.text').xpath(
+        '//div/p/text()').extract()
+    paragraph2 = response.css('.txtc').xpath('//p/text()').extract()
+    paragraph3 = response.css('.cont').css('.text').xpath(
+        '//div/p/text()').extract()
+
     yield {
         'date': date,
+        'month': month,
+        'day': day,
         'title': title,
-        'paragraph': paragraph
+        'title2': title2,
+        'paragraph': paragraph,
+        'paragraph2': paragraph2,
+        'paragraph3': paragraph3
     }
 
     next_pages = response.xpath('//*[@id="__prev_permalink__"]/@href')
@@ -108,11 +139,11 @@ def grab_and_output(url, author, output_folder):
 
 
 if (__name__ == "__main__"):
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print('''
 Usage:
     python get_lofter_stories.py \
-https://XXX.lofter.com/post/XXXXXXXXXXXX
+https://XXX.lofter.com/post/XXXXXXXXXXXX f:\\temp
 
     This spider crawls Lofter posts listed in a users's archive page.
     Specify the oldest post you wish to crawl. Then it downloads all
@@ -129,6 +160,6 @@ https://XXX.lofter.com/post/XXXXXXXXXXXX
 
     author = matchObj.group(2)
 
-    output_filename = grab_and_output(url, author)
+    output_filename = grab_and_output(url, author, sys.argv[2])
     print('\nDone.\n')
     print('Save to: %s\n' % output_filename)

@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['grab_lofter.py'],
+a = Analysis(['get_lofter_stories.py'],
              pathex=['E:\\code\\lofter_spider'],
              binaries=[],
              datas=[],
@@ -23,11 +23,11 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='grab_lofter',
+          name='get_lofter_stories',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=False )
+          console=True )
