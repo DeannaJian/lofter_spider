@@ -21,7 +21,6 @@ def output_txt_from_xml(input_file, output_file, silent=False):
     item_num = len(root.findall('item')) + 1
 
     title_patents = ('title', 'title2')
-    paragraph_patents = ('paragraph', 'paragraph2', 'paragraph3')
 
     with open(output_file, 'w', encoding='utf-8') as ff:
         for ii in range(1, item_num):
@@ -46,13 +45,12 @@ def output_txt_from_xml(input_file, output_file, silent=False):
             if ((month != 'None') & (day != 'None')):
                 ff.write('  %s-%s\n\n' % (month, day))
 
-            for jj in range(0, len(paragraph_patents)):
-                paragraph_list = root.findall(
-                    './/item[%d]/%s/value' % (ii, paragraph_patents[jj]))
-                for paragraph in paragraph_list:
-                    para_content = paragraph.text
-                    if para_content is not None:
-                        ff.write('  ' + para_content + '\n')
+            paragraph_list = root.findall(
+                './/item[%d]/paragraph/value' % ii)
+            for paragraph in paragraph_list:
+                para_content = paragraph.text
+                if para_content is not None:
+                    ff.write('  ' + para_content + '\n')
 
             if (ii % 50) == 0:
                 ff.flush()
@@ -65,11 +63,7 @@ def parse(self, response):
     month = response.css('div.month a::text').extract_first()
     title = response.css('div.text h2 a::text').extract_first()
     title2 = response.css('.ttl').xpath('//h2/a/text()').extract_first()
-    paragraph = response.css('.content').css('.text').xpath(
-        '//div/p/text()').extract()
-    paragraph2 = response.css('.txtc').xpath('//p/text()').extract()
-    paragraph3 = response.css('.cont').css('.text').xpath(
-        '//div/p/text()').extract()
+    paragraph = response.xpath('//p/text()').extract()
 
     yield {
         'date': date,
@@ -77,9 +71,7 @@ def parse(self, response):
         'day': day,
         'title': title,
         'title2': title2,
-        'paragraph': paragraph,
-        'paragraph2': paragraph2,
-        'paragraph3': paragraph3
+        'paragraph': paragraph
     }
 
     next_pages = response.xpath('//*[@id="__prev_permalink__"]/@href')
